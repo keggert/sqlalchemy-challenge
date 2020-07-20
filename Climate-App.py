@@ -50,8 +50,8 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/temp/<start><br/>"
-        f"/api/v1.0/temp/<start>/end"
+        f"/api/v1.0/start<br/>"
+        f"/api/v1.0/start/end"
     )
 
 
@@ -91,25 +91,26 @@ def monthlytemperature():
     return jsonify(temperatures=temperatures)
 
 
-@app.route("/api/v1.0/temp/<start>")
-@app.route("/api/v1.0/temp/<start>/<end>")
-def calctemps(start_date=[2012, 08, 20], end_date=[2012, 08, 25]):
+@app.route("/api/v1.0/<start>")
+def start(start):
     # Calculate for TMIN, TAVG, TMAX
     # Start
-    sel = [func.min(Measurement.tobs), func.avg(
-        Measurement.tobs), func.max(Measurement.tobs)]
     # Calculate for dates greater than start
-    results = session.query(*sel).\
-        filter(Measurement.date >= start_date).all()
-    temperatures = list(np.ravel(results))
-    return jsonify(temperatures=temperatures)
-    # Calculate for dates with start and end
-    results = session.query(*sel).\
-        filter(Measurement.date >= start_date).\
-        filter(Measurement.date <= end_date).all()
+    results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+        filter(Measurement.date >= start).all()
+    # results = session.query(*sel).\
+        # filter(Measurement.date >= dt.date(2016, 10, 17)).all()
     temperatures = list(np.ravel(results))
     return jsonify(temperatures=temperatures)
 
+@app.route("/api/v1.0/<start>/<end>")
+def start_end(start, end):
+    # Calculate for dates with start and end
+    # sel = [func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)]
+    results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+        filter(Measurement.date >= start).filter(Measurement.date <= end).all()
+    temperatures = list(np.ravel(results))
+    return jsonify(temperatures=temperatures)
 
 if __name__ == '__main__':
     app.run(debug=True)
